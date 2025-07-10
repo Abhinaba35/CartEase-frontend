@@ -4,6 +4,8 @@ import { Navbar } from "../components/Navbar";
 
 const ProfilePage = () => {
   const [products, setProducts] = useState([]);
+  const [EditProductId, setEditProductId] = useState("");
+  const [updatedPrice, setUpdatedPrice] = useState("");
 
   const getData = async () => {
     try {
@@ -59,6 +61,32 @@ const ProfilePage = () => {
       alert(`Cannot add product: ${err.message}`);
     }
 
+  }
+
+  const handleEdit = async (productId) => {
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/products/${productId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          price: updatedPrice,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (resp.status === 200) {
+        alert("Product updated successfully!");
+        setEditProductId("");
+        getData();
+      } else {
+        const result = await resp.json();
+        alert(`Error updating product: ${result.message}`);
+      }
+    } catch (err) {
+      console.error("Error updating product:", err.message);
+      alert(`Error updating product: ${err.message}`);
+    }
   }
 
   return (
@@ -129,10 +157,29 @@ const ProfilePage = () => {
             <h2 className="text-xl font-bold text-blue-900 mb-2">
               {product.title}
             </h2>
-            <p className="text-blue-700 font-semibold mb-2">
+            {
+              product._id === EditProductId ? (
+               <> 
+                 <input value={updatedPrice} onChange={(e) => setUpdatedPrice(e.target.value)} className="py-1 "></input>
+                 <button className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 mb-2 " onClick={() => setEditProductId("")}>
+                  Cancel 
+                </button>
+                <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 mb-2" onClick={() => handleEdit(product._id)}>
+                  Save
+                </button>
+               </>
+
+              ) :
+            (<p className="text-blue-700 font-semibold mb-2">
               Price: <span className="text-lg">Rs. {product.price}</span>
             </p>
-            {/* Add more product details here if needed */}
+            )
+
+            }
+
+            <button onClick={() => {setEditProductId(product._id) , setUpdatedPrice("")}} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200">
+              Edit Product
+            </button>
           </div>
         ))}
       </div>
